@@ -8,3 +8,5 @@ notebook
 jupyterlab
 joblib
 tensorflow
+streamlit
+requests
