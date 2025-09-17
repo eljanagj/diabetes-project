@@ -97,16 +97,12 @@ def load_predictor():
     return DiabetesPredictor()
 
 def main():
-    st.title("🩺 Diabetes Risk Prediction System")
-    st.markdown("AI-powered diabetes risk assessment using machine learning")
-    
+
     predictor = load_predictor()
     
     if not predictor.load_models():
         st.error("Failed to load models. Please check the model files.")
         return
-    
-    with st.sidebar:
         st.header("Model Information")
         
         if predictor.best_model_info:
@@ -115,12 +111,8 @@ def main():
             st.metric("AUC-ROC", f"{predictor.best_model_info.get('auc_roc', 0):.3f}")
             st.metric("Accuracy", f"{predictor.best_model_info.get('accuracy', 0):.3f}")
         
-        st.header("Model Selection")
-        model_choice = st.selectbox(
-            "Choose Model:",
-            list(predictor.models.keys()),
-            index=0
-        )
+        st.header("Model Information")
+        st.info("Using Random Forest (Best Model)")
         
         st.header("About")
         st.info("""
@@ -131,11 +123,12 @@ def main():
         - Clinical measurements (glucose, blood pressure, insulin)
         """)
     
-    col1, col2 = st.columns([1, 1])
+    # Center the form using columns
+    col1, col2, col3 = st.columns([1, 2, 1])
     
-    with col1:
-        st.header("Patient Information")
+    with col2:
         
+        st.title("🩺 Diabetes Risk Prediction")
         with st.form("prediction_form"):
             st.subheader("Personal Information")
             gender = st.selectbox("Gender", ["Female", "Male"])
@@ -181,7 +174,7 @@ def main():
             }
             
             with st.spinner("Analyzing data..."):
-                result = predictor.predict(data, model_choice)
+                result = predictor.predict(data, "Random Forest")
             
             if "error" in result:
                 st.error(f"Error: {result['error']}")
@@ -210,7 +203,7 @@ def main():
                 with col2a:
                     st.metric("Prediction", "Diabetes" if prediction == 1 else "No Diabetes")
                 with col2b:
-                    st.metric("Model Used", result['model_used'])
+                    st.metric("Model Used", "Random Forest")
                 
                 st.subheader("Risk Interpretation")
                 if risk_level == "Low Risk":
@@ -231,24 +224,10 @@ def main():
                     Please consult with a healthcare provider immediately for
                     proper evaluation and management.
                     """)
-                
-                if hasattr(predictor.models[model_choice], 'feature_importances_'):
-                    st.subheader("Feature Importance")
-                    feature_importance = predictor.models[model_choice].feature_importances_
-                    feature_df = pd.DataFrame({
-                        'Feature': predictor.feature_cols,
-                        'Importance': feature_importance
-                    }).sort_values('Importance', ascending=True)
-                    
-                    fig, ax = plt.subplots(figsize=(8, 6))
-                    ax.barh(feature_df['Feature'], feature_df['Importance'])
-                    ax.set_xlabel('Importance')
-                    ax.set_title('Feature Importance')
-                    st.pyplot(fig)
         
         else:
             st.info("Please fill in the patient information and click 'Assess Diabetes Risk' to get started.")
-    
+
     # Footer
     st.markdown("---")
     st.markdown("""
